@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-language Real-Time Voice-to-Text</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.min.js"></script>
+    <style>
+
+    </style>
+</head>
+<body>
+    <h1>Real-Time Voice-to-Text (Multi-language)</h1>
+    <label for="language-select">Select Language: </label>
+    <select id="language-select">
+        <option value="en-US">English (United States)</option>
+        <option value="es-ES">Spanish (Spain)</option>
+        <option value="fr-FR">French (France)</option>
+        <option value="de-DE">German (Germany)</option>
+        <option value="zh-CN">Chinese (Mandarin)</option>
+        <option value="hi-IN">Hindi (India)</option>
+        <!-- Add more languages as needed -->
+    </select>
+
+    <button id="start-btn">Start Recording</button>
+    <p id="result">Your speech will appear here...</p>
+
+    <script>
+        var socket = io();
+        var recognition;
+
+        // Initialize Speech Recognition
+        window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new window.SpeechRecognition();
+        recognition.interimResults = true;
+        recognition.continuous = true; // Keep the recognition running
+
+        document.getElementById('start-btn').addEventListener('click', function () {
+            var selectedLanguage = document.getElementById('language-select').value;
+            recognition.lang = selectedLanguage; // Set language based on selection
+            recognition.start();
+        });
+
+        recognition.onresult = function(event) {
+            var transcript = '';
+            for (var i = event.resultIndex; i < event.results.length; i++) {
+                transcript += event.results[i][0].transcript;
+            }
+            document.getElementById('result').innerText = transcript;
+
+            // Send transcript to the server
+            socket.emit('message', transcript);
+        };
+
+        socket.on('response', function(data) {
+            console.log('Server says:', data.data);
+        });
+    </script>
+</body>
+</html>
